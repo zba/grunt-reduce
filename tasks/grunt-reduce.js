@@ -49,6 +49,14 @@ module.exports = function (grunt) {
             autoprefix = config.autoprefix;
         }
 
+        var inlineByRelationType = {};
+
+        if (config.inlineByRelationType) {
+            inlineByRelationType = config.inlineByRelationType;
+        } else if (config.inlineSize !== 0) {
+            inlineByRelationType['*'] = config.inlineSize;
+        }
+
         new AssetGraph({ root: rootUrl })
             .on('afterTransform', function (transform, elapsedTime) {
                 console.log((elapsedTime / 1000).toFixed(3) + ' secs: ' + transform.name);
@@ -70,7 +78,7 @@ module.exports = function (grunt) {
                 pngquant: optimizeImages,
                 pngcrush: optimizeImages,
                 optipng: optimizeImages,
-                inlineSize: config.inlineSize === 0 ? 0 : (config.inlineSize || 4096),
+                inlineSize: inlineByRelationType,
                 autoprefix: autoprefix,
                 manifest: config.manifest || false,
                 asyncScripts: asyncScripts,
