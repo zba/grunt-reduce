@@ -78,7 +78,7 @@ module.exports = function (grunt) {
                 pngquant: optimizeImages,
                 pngcrush: optimizeImages,
                 optipng: optimizeImages,
-                inlineSize: inlineByRelationType,
+                inlineByRelationType: inlineByRelationType,
                 autoprefix: autoprefix,
                 manifest: config.manifest || false,
                 asyncScripts: asyncScripts,
