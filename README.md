@@ -1,8 +1,8 @@
-[![NPM version](https://badge.fury.io/js/grunt-reduce.png)](http://badge.fury.io/js/grunt-reduce)
+# grunt-reduce
+
+[![NPM version](https://badge.fury.io/js/grunt-reduce.svg)](http://badge.fury.io/js/grunt-reduce)
 [![Dependency Status](https://david-dm.org/Munter/grunt-reduce.png)](https://david-dm.org/Munter/grunt-reduce)
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/Munter/grunt-reduce/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
-# grunt-reduce
 
 A grunt kitchen that reduces your web ingredients down to their essence for optimal serving. Bon appétit!
 
@@ -59,15 +59,20 @@ module.exports = function( grunt ) {
           '*.ico'
         ],
 
-        // Browser support configuration to send to autoprefixer.
-        // If any value is set, any `prefixfree.js` script reference will also be removed
+        // Browser support configuration to send to autoprefixer and other transforms.
         // Browser support syntax documentation: https://github.com/ai/autoprefixer#browsers
-        autoprefix: [
+        browsers: [
             '> 1%',
             'last 2 versions',
             'Firefox ESR',
             'Opera 12.1'
         ],
+
+        // Add Angular.js annotations with ng-annotate
+        angular: false, // Default: false
+
+        // Compile scss files
+        scss: true, // Default: true
 
         // Compile less files and remove less.js from application
         less: true, // Default: true
@@ -75,6 +80,9 @@ module.exports = function( grunt ) {
         // Run all available jpeg and png optimizations on images
         // For maximum efficiency install jpegtran, optipng, pngcrush and pngquant
         optimizeImages: true, // Default: true
+
+        // Revision file names with the md5 sum of the file content and move to /static/
+        fileRev: true, // Default: true
 
         // Create a cache manifest file
         // If one already exists it will be ammended with static assets
@@ -138,15 +146,40 @@ When using this technique it is recommended to have a seperate dom element for e
 Note about data-uris: IE versions lower than 8 do not understand data-uris. grunt-reduce adds a fallback to get the original image using conditional comments for these old IE versions.
 
 
+# Internationalization
+Internationalization is optional, and is done by parsing in a `locales` key to the grunt reduce configuration like so:
+
+``` javascript
+module.exports = function( grunt ) {
+  'use strict';
+
+  grunt.initConfig({
+    reduce: {
+        // Source folder
+        root: 'app', // Default: 'app',
+
+        // Build destination folder
+        outRoot: 'dist', // Default: 'dist',
+
+        // Output languages
+        locales: [
+            'da',
+            'en'
+        ]
+    }
+  })
+}
+```
+
+Please read the [internationalization documentation](https://github.com/assetgraph/assetgraph-builder#internationalization) in Asset Graph Builder project for more information on the subject.
+
+
 # Tools used
-* Assetgraph: https://github.com/One-com/assetgraph
-* Assetgraph-builder: https://github.com/One-com/assetgraph-builder
-* Assetgraph-sprite: https://github.com/One-com/assetgraph-sprite
+* Assetgraph: https://github.com/assetgraph/assetgraph
+* Assetgraph-builder: https://github.com/assetgraph/assetgraph-builder
+* Assetgraph-sprite: https://github.com/assetgraph/assetgraph-sprite
 
 
 ## License
 Copyright (c) 2012 Peter Müller
 Licensed under the MIT license.
-
-
-

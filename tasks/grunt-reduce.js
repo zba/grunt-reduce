@@ -15,17 +15,30 @@ module.exports = function (grunt) {
 
         var AssetGraph = require('assetgraph-builder'),
             query = AssetGraph.query,
-            urlTools = require('urltools');
+            urlTools = require('urltools'),
+            chalk = require('chalk');
 
         var config = grunt.config(this.name) || {},
             rootUrl = urlTools.fsDirToFileUrl(config.root || 'app'),
             outRoot = urlTools.fsDirToFileUrl(config.outRoot || 'dist'),
             cdnRoot = config.cdnRoot && urlTools.ensureTrailingSlash(config.cdnRoot),
             cdnOutRoot = config.cdnOutRoot && urlTools.fsDirToFileUrl(config.cdnOutRoot),
+            canonicalUrl = config.canonicalUrl && urlTools.ensureTrailingSlash(config.canonicalUrl),
             optimizeImages = config.optimizeImages === false ? false : true,
             less = config.less === false ? false : true,
+            scss = config.scss === false ? false : true,
+            fileRev = config.fileRev === false ? false : true,
             asyncScripts = config.asyncScripts === false ? false : true,
             sharedBundles = config.sharedBundles === false ? false : true;
+
+        // Support for locales
+        var localeIds;
+        if (Array.isArray(config.locales)) {
+            localeIds = config.locales.map(function (localeId) {
+                // Normalize localeId
+                return localeId && localeId.replace(/-/g, '_').toLowerCase();
+            });
+        }
 
         var loadAssets = [
             '*.html',
@@ -38,7 +51,7 @@ module.exports = function (grunt) {
             loadAssets = config.include;
         }
 
-        var autoprefix = [
+        var browsers = [
             '> 1%',
             'last 2 versions',
             'Firefox ESR',
@@ -46,7 +59,12 @@ module.exports = function (grunt) {
         ];
 
         if (config.autoprefix) {
-            autoprefix = config.autoprefix;
+            grunt.log.writeln(chalk.yellow(' ⚠ The "autoprefix" property has been deprecated and replaced with "browsers". Please update your grunt-reduce config.'));
+            browsers = config.autoprefix;
+        }
+
+        if (config.browsers) {
+            browsers = config.browsers;
         }
 
         var inlineByRelationType = {};
@@ -58,37 +76,32 @@ module.exports = function (grunt) {
         }
 
         new AssetGraph({ root: rootUrl })
-            .on('afterTransform', function (transform, elapsedTime) {
-                console.log((elapsedTime / 1000).toFixed(3) + ' secs: ' + transform.name);
-            })
-            .on('warn', function (err) {
-                // These are way too noisy
-                if (err.relationType !== 'JavaScriptCommonJsRequire') {
-                    console.warn((err.asset ? err.asset.urlOrDescription + ': ' : '') + err.message);
-                }
-            })
-            .on('error', function (err) {
-                console.error((err.asset ? err.asset.urlOrDescription + ': ' : '') + err.stack);
-            })
+            .logEvents()
             .registerRequireJsConfig()
             .loadAssets(loadAssets)
             .buildProduction({
+                angular: config.angular,
+                recursive: true,
+                canonicalUrl: canonicalUrl,
+                browsers: browsers,
                 less: less,
-                jpegtran: optimizeImages,
-                pngquant: optimizeImages,
-                pngcrush: optimizeImages,
-                optipng: optimizeImages,
+                scss: scss,
+                noFileRev: !fileRev,
+                optimizeImages: optimizeImages,
+
+                inlineSize: config.inlineSize === 0 ? 0 : (config.inlineSize || 4096),
                 inlineByRelationType: inlineByRelationType,
-                autoprefix: autoprefix,
                 manifest: config.manifest || false,
                 asyncScripts: asyncScripts,
                 cdnRoot: cdnRoot,
                 noCompress: config.pretty || false,
-                sharedBundles: sharedBundles
+                sharedBundles: sharedBundles,
+                stripDebug: !(config.pretty || false),
+                localeIds: localeIds
             })
-            .writeAssetsToDisc({url: /^file:/}, outRoot)
+            .writeAssetsToDisc({url: /^file:/, isLoaded: true}, outRoot)
             .if(cdnRoot)
-                .writeAssetsToDisc({url: query.createPrefixMatcher(cdnRoot)}, cdnOutRoot || outRoot, cdnRoot)
+                .writeAssetsToDisc({url: query.createPrefixMatcher(cdnRoot), isLoaded: true}, cdnOutRoot || outRoot, cdnRoot)
             .endif()
             .writeStatsToStderr()
             .run(done);
